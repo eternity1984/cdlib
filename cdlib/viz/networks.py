@@ -98,24 +98,24 @@ def plot_network_clusters(graph, partition, position=None, figsize=(8, 8), node_
 
 def plot_community_graph(graph, partition, figsize=(8, 8), node_size=200, plot_overlaps=False, plot_labels=False, cmap=None):
     """
-        Plot a algorithms-graph with node color coding for communities.
+    Plot a algorithms-graph with node color coding for communities.
 
-        :param graph: NetworkX/igraph graph
-        :param partition: NodeClustering object
-        :param figsize: the figure size; it is a pair of float, default (8, 8)
-        :param node_size: int, default 200
-        :param plot_overlaps: bool, default False. Flag to control if multiple algorithms memberships are plotted.
-        :param plot_labels: bool, default False. Flag to control if node labels are plotted.
-        :param cmap: str or Matplotlib colormap, Colormap(Matplotlib colormap) for mapping intensities of nodes. If set to None, original colormap is used..
+    :param graph: NetworkX/igraph graph
+    :param partition: NodeClustering object
+    :param figsize: the figure size; it is a pair of float, default (8, 8)
+    :param node_size: int, default 200
+    :param plot_overlaps: bool, default False. Flag to control if multiple algorithms memberships are plotted.
+    :param plot_labels: bool, default False. Flag to control if node labels are plotted.
+    :param cmap: str or Matplotlib colormap, Colormap(Matplotlib colormap) for mapping intensities of nodes. If set to None, original colormap is used..
 
-        Example:
+    Example:
 
-        >>> from cdlib import algorithms, viz
-        >>> import networkx as nx
-        >>> g = nx.karate_club_graph()
-        >>> coms = algorithms.louvain(g)
-        >>> viz.plot_community_graph(g, coms)
-        """
+    >>> from cdlib import algorithms, viz
+    >>> import networkx as nx
+    >>> g = nx.karate_club_graph()
+    >>> coms = algorithms.louvain(g)
+    >>> viz.plot_community_graph(g, coms)
+    """
 
     cms = partition.communities
 
