@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -28,9 +29,15 @@ COLOR = (
     (0.5, 0.5, 0.5)
 )
 
+def __filter(partition, top_k, min_size):
+    if isinstance(min_size, int) and min_size > 0:
+        partition = list(filter(lambda nodes: len(nodes) >= min_size, partition))
+    if isinstance(top_k, int) and top_k > 0:
+        partition = partition[:top_k]
+    return partition
 
 def plot_network_clusters(graph, partition, position=None, figsize=(8, 8), node_size=200, plot_overlaps=False,
-                          plot_labels=False, cmap=None):
+                          plot_labels=False, cmap=None, top_k=None, min_size=None):
     """
     Plot a graph with node color coding for communities.
 
@@ -42,6 +49,8 @@ def plot_network_clusters(graph, partition, position=None, figsize=(8, 8), node_
     :param plot_overlaps: bool, default False. Flag to control if multiple algorithms memberships are plotted.
     :param plot_labels: bool, default False. Flag to control if node labels are plotted.
     :param cmap: str or Matplotlib colormap, Colormap(Matplotlib colormap) for mapping intensities of nodes. If set to None, original colormap is used.
+    :param top_k: int, Show the top K influential communities. If set to zero or negative value indicates all.
+    :param min_size: int, Exclude communities below the specified minimum size.
 
     Example:
 
@@ -56,12 +65,16 @@ def plot_network_clusters(graph, partition, position=None, figsize=(8, 8), node_
         raise TypeError("The 'cmap' argument must be NoneType, str or matplotlib.colors.Colormap, "
                         "not %s." % (type(cmap).__name__))
 
-    partition = partition.communities
+    partition = __filter(partition.communities, top_k, min_size)
     graph = convert_graph_formats(graph, nx.Graph)
     if position==None:
         position=nx.spring_layout(graph)
 
     n_communities = len(partition)
+    if n_communities == 0:
+        warnings.warn("There are no communities that match the filter criteria.")
+        return None
+
     if cmap is None:
         n_communities = min(n_communities, len(COLOR))
         cmap = matplotlib.colors.ListedColormap(COLOR[:n_communities])
@@ -74,9 +87,15 @@ def plot_network_clusters(graph, partition, position=None, figsize=(8, 8), node_
     plt.figure(figsize=figsize)
     plt.axis('off')
 
-    fig = nx.draw_networkx_nodes(graph, position, node_size=node_size, node_color='w')
+    filtered_nodelist = list(np.concatenate(partition))
+    filtered_edgelist = list(filter(lambda edge: len(np.intersect1d(edge, filtered_nodelist))==2, graph.edges()))
+    fig = nx.draw_networkx_nodes(graph, position, node_size=node_size, node_color='w',
+                                 nodelist=filtered_nodelist)
     fig.set_edgecolor('k')
-    nx.draw_networkx_edges(graph, position, alpha=.5)
+    nx.draw_networkx_edges(graph, position, alpha=.5, edgelist=filtered_edgelist)
+    if plot_labels:
+        nx.draw_networkx_labels(graph, position, font_color=".2",
+                                labels={node: str(node) for node in filtered_nodelist})
     for i in range(n_communities):
         if len(partition[i]) > 0:
             if plot_overlaps:
@@ -96,7 +115,7 @@ def plot_network_clusters(graph, partition, position=None, figsize=(8, 8), node_
     return fig
 
 
-def plot_community_graph(graph, partition, figsize=(8, 8), node_size=200, plot_overlaps=False, plot_labels=False, cmap=None):
+def plot_community_graph(graph, partition, figsize=(8, 8), node_size=200, plot_overlaps=False, plot_labels=False, cmap=None, top_k=None, min_size=None):
     """
     Plot a algorithms-graph with node color coding for communities.
 
@@ -107,6 +126,8 @@ def plot_community_graph(graph, partition, figsize=(8, 8), node_size=200, plot_o
     :param plot_overlaps: bool, default False. Flag to control if multiple algorithms memberships are plotted.
     :param plot_labels: bool, default False. Flag to control if node labels are plotted.
     :param cmap: str or Matplotlib colormap, Colormap(Matplotlib colormap) for mapping intensities of nodes. If set to None, original colormap is used..
+    :param top_k: int, Show the top K influential communities. If set to zero or negative value indicates all.
+    :param min_size: int, Exclude communities below the specified minimum size.
 
     Example:
 
@@ -117,7 +138,7 @@ def plot_community_graph(graph, partition, figsize=(8, 8), node_size=200, plot_o
     >>> viz.plot_community_graph(g, coms)
     """
 
-    cms = partition.communities
+    cms = __filter(partition.communities, top_k, min_size)
 
     node_to_com = {}
     for cid, com in enumerate(cms):
