@@ -103,8 +103,7 @@ def plot_network_clusters(graph, partition, position=None, figsize=(8, 8), node_
             else:
                 size = node_size
             fig = nx.draw_networkx_nodes(graph, position, node_size=size,
-                                         nodelist=partition[i], node_color=[i] * len(partition[i]), 
-                                         cmap=cmap, vmin=0, vmax=n_communities-1)
+                                         nodelist=partition[i], node_color=[cmap(_norm(i))])
             fig.set_edgecolor('k')
     if plot_labels:
         for i in range(n_communities):
